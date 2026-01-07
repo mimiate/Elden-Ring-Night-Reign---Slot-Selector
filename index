@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Elden Ring Night Reign - Slot Selector</title>
+    <style>
+        body {
+            background: radial-gradient(circle, #1a1a1a 0%, #050505 100%);
+            color: #d4c3a1;
+            font-family: 'serif';
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .logo {
+            width: 90%;
+            max-width: 730px;
+            height: auto;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 15px rgba(197, 160, 89, 0.3));
+        }
+
+        .container {
+            display: flex;
+            gap: 35px;
+            margin-bottom: 30px;
+        }
+
+        .slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 額縁スロット（縦長に少し拡張） */
+        .slot-box {
+            width: 220px; 
+            height: 280px; /* 縦を少し伸ばして上下を見切らせる */
+            background-color: #000;
+            position: relative;
+            border: 2px solid #c5a059;
+            box-sizing: border-box;
+            overflow: hidden; /* はみ出た画像を切る */
+        }
+
+        /* 各色の帯 */
+        .color-border {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-width: 5px;
+            border-style: solid;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .red-slot { border-color: #ff0000; box-shadow: 0 0 50px rgba(255, 0, 0, 0.5); }
+        .blue-slot { border-color: #0044ff; box-shadow: 0 0 50px rgba(0, 68, 255, 0.5); }
+        .green-slot { border-color: #00ff00; box-shadow: 0 0 50px rgba(0, 255, 0, 0.5); }
+
+        /* 内側の金枠 */
+        .slot-box::after {
+            content: "";
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 2px solid #c5a059;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        /* 画像が流れるリール部分 */
+        .reel {
+            position: absolute;
+            top: -220px; /* 初期位置 */
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+
+        .reel img {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ボタン共通スタイル */
+        button {
+            background-color: #111;
+            color: #c5a059;
+            border: 1px solid #c5a059;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 個別ストップボタン */
+        .stop-btn {
+            padding: 8px 30px;
+            font-size: 1rem;
+        }
+
+        /* メイン開始ボタン */
+        .start-btn {
+            padding: 15px 80px;
+            font-size: 1.4rem;
+            letter-spacing: 6px;
+            margin-top: 20px;
+        }
+
+        .btn-container { position: relative; }
+        .pulse {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px solid #c5a059;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .animate-pulse { animation: pulse-animation 0.6s ease-out; }
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.5, 1.8); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" alt="Logo" class="logo">
+
+    <div class="container">
+        <div class="slot-wrapper">
+            <div class="slot-box">
+                <div class="color-border red-slot"></div>
+                <div id="reel-red" class="reel"></div>
+            </div>
+            <button class="stop-btn" id="stop-red" disabled>STOP</button>
+        </div>
+        <div class="slot-wrapper">
+            <div class="slot-box">
+                <div class="color-border blue-slot"></div>
+                <div id="reel-blue" class="reel"></div>
+            </div>
+            <button class="stop-btn" id="stop-blue" disabled>STOP</button>
+        </div>
+        <div class="slot-wrapper">
+            <div class="slot-box">
+                <div class="color-border green-slot"></div>
+                <div id="reel-green" class="reel"></div>
+            </div>
+            <button class="stop-btn" id="stop-green" disabled>STOP</button>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <div id="pulse-effect" class="pulse"></div>
+        <button id="action-btn" class="start-btn">抽選開始</button>
+    </div>
+
+    <script>
+        const images = ["01.png", "02.png", "03.png", "04.png", "05.png", "06.png", "07.png", "08.png", "09.png", "10.png"];
+        const reels = [
+            { id: 'red', element: document.getElementById('reel-red'), stopBtn: document.getElementById('stop-red'), timer: null, pos: 0, speed: 0 },
+            { id: 'blue', element: document.getElementById('reel-blue'), stopBtn: document.getElementById('stop-blue'), timer: null, pos: 0, speed: 0 },
+            { id: 'green', element: document.getElementById('reel-green'), stopBtn: document.getElementById('stop-green'), timer: null, pos: 0, speed: 0 }
+        ];
+
+        const startBtn = document.getElementById('action-btn');
+        const pulse = document.getElementById('pulse-effect');
+
+        // リールに画像を初期セット
+        reels.forEach(reel => {
+            // スロットのために画像を循環させる（3枚以上並べる）
+            for(let i=0; i<20; i++) {
+                const img = document.createElement('img');
+                img.src = images[i % images.length];
+                reel.element.appendChild(img);
+            }
+        });
+
+        function triggerPulse() {
+            pulse.classList.remove('animate-pulse');
+            void pulse.offsetWidth; 
+            pulse.classList.add('animate-pulse');
+        }
+
+        function spin(reel) {
+            reel.pos += reel.speed;
+            if (reel.pos >= 220) {
+                reel.pos = 0;
+                // 先頭の画像を最後に回す
+                reel.element.appendChild(reel.element.firstElementChild);
+            }
+            reel.element.style.transform = `translateY(${reel.pos}px)`;
+            reel.timer = requestAnimationFrame(() => spin(reel));
+        }
+
+        startBtn.addEventListener('click', () => {
+            triggerPulse();
+            startBtn.disabled = true;
+            reels.forEach(reel => {
+                reel.speed = 20; // 回転速度
+                reel.stopBtn.disabled = false;
+                spin(reel);
+            });
+        });
+
+        reels.forEach(reel => {
+            reel.stopBtn.addEventListener('click', () => {
+                reel.stopBtn.disabled = true;
+                
+                // 徐々に減速して止める演出（約1秒）
+                const slowDown = setInterval(() => {
+                    reel.speed *= 0.8;
+                    if (reel.speed < 1) {
+                        clearInterval(slowDown);
+                        cancelAnimationFrame(reel.timer);
+                        reel.speed = 0;
+                        reel.element.style.transform = `translateY(30px)`; // 真ん中に合わせる調整
+                        checkAllStopped();
+                    }
+                }, 100);
+            });
+        });
+
+        function checkAllStopped() {
+            if (reels.every(r => r.speed === 0)) {
+                startBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
