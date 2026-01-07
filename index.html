@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Elden Ring Night Reign - Slot Selector</title>
+    <title>Elden Ring Night Reign - Slot Master</title>
     <style>
         body {
             background: radial-gradient(circle, #1a1a1a 0%, #050505 100%);
@@ -21,13 +21,13 @@
             width: 90%;
             max-width: 730px;
             height: auto;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             filter: drop-shadow(0 0 15px rgba(197, 160, 89, 0.3));
         }
 
         .container {
             display: flex;
-            gap: 35px;
+            gap: 40px; /* 枠同士を少し離しました */
             margin-bottom: 30px;
         }
 
@@ -35,103 +35,95 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
-        /* 額縁スロット（縦長に少し拡張） */
+        /* 1. スロットのサイズ調整（縦に長く） */
         .slot-box {
             width: 220px; 
-            height: 280px; /* 縦を少し伸ばして上下を見切らせる */
+            height: 380px; /* 縦を大幅に伸ばしました */
             background-color: #000;
             position: relative;
-            border: 2px solid #c5a059;
+            border: 5px solid #c5a059; /* 金枠を太く */
             box-sizing: border-box;
-            overflow: hidden; /* はみ出た画像を切る */
+            overflow: hidden;
         }
 
-        /* 各色の帯 */
+        /* 2. 額縁の色の帯 */
         .color-border {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            border-width: 5px;
+            border-width: 12px;
             border-style: solid;
             pointer-events: none;
-            z-index: 5;
+            z-index: 10;
         }
         .red-slot { border-color: #ff0000; box-shadow: 0 0 50px rgba(255, 0, 0, 0.5); }
         .blue-slot { border-color: #0044ff; box-shadow: 0 0 50px rgba(0, 68, 255, 0.5); }
         .green-slot { border-color: #00ff00; box-shadow: 0 0 50px rgba(0, 255, 0, 0.5); }
 
-        /* 内側の金枠 */
+        /* 内側の細い金枠 */
         .slot-box::after {
             content: "";
             position: absolute;
-            top: 2px; left: 2px; right: 2px; bottom: 2px;
-            border: 2px solid #c5a059;
-            z-index: 6;
+            top: 12px; left: 12px; right: 12px; bottom: 12px;
+            border: 1px solid #c5a059;
+            z-index: 11;
             pointer-events: none;
         }
 
-        /* 画像が流れるリール部分 */
+        /* 3. リールの動き（物理移動） */
         .reel {
             position: absolute;
-            top: -220px; /* 初期位置 */
+            top: 0;
             left: 0;
             width: 100%;
-            display: flex;
-            flex-direction: column;
+            will-change: transform;
             z-index: 1;
         }
 
         .reel img {
             width: 220px;
-            height: 220px;
+            height: 220px; /* アイコン自体のサイズ */
             object-fit: cover;
             display: block;
         }
 
-        /* ボタン共通スタイル */
+        /* 中央の判定をわかりやすくするためのガイド（必要なければ消せます） */
+        .center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(197, 160, 89, 0.2);
+            z-index: 12;
+            transform: translateY(-50%);
+        }
+
         button {
             background-color: #111;
             color: #c5a059;
             border: 1px solid #c5a059;
             cursor: pointer;
-            letter-spacing: 2px;
             transition: all 0.3s ease;
-            outline: none;
         }
 
-        button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
+        button:disabled { opacity: 0.2; cursor: not-allowed; }
 
-        /* 個別ストップボタン */
-        .stop-btn {
-            padding: 8px 30px;
-            font-size: 1rem;
-        }
-
-        /* メイン開始ボタン */
-        .start-btn {
-            padding: 15px 80px;
-            font-size: 1.4rem;
-            letter-spacing: 6px;
-            margin-top: 20px;
-        }
+        .stop-btn { padding: 10px 40px; font-size: 1.1rem; letter-spacing: 2px; }
+        .start-btn { padding: 18px 100px; font-size: 1.5rem; letter-spacing: 8px; margin-top: 20px; }
 
         .btn-container { position: relative; }
         .pulse {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            border: 2px solid #c5a059;
-            opacity: 0;
-            pointer-events: none;
+            border: 2px solid #c5a059; opacity: 0; pointer-events: none;
         }
         .animate-pulse { animation: pulse-animation 0.6s ease-out; }
         @keyframes pulse-animation {
             0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.5, 1.8); opacity: 0; }
+            100% { transform: scale(1.5, 2); opacity: 0; }
         }
     </style>
 </head>
@@ -143,6 +135,7 @@
         <div class="slot-wrapper">
             <div class="slot-box">
                 <div class="color-border red-slot"></div>
+                <div class="center-line"></div>
                 <div id="reel-red" class="reel"></div>
             </div>
             <button class="stop-btn" id="stop-red" disabled>STOP</button>
@@ -150,6 +143,7 @@
         <div class="slot-wrapper">
             <div class="slot-box">
                 <div class="color-border blue-slot"></div>
+                <div class="center-line"></div>
                 <div id="reel-blue" class="reel"></div>
             </div>
             <button class="stop-btn" id="stop-blue" disabled>STOP</button>
@@ -157,6 +151,7 @@
         <div class="slot-wrapper">
             <div class="slot-box">
                 <div class="color-border green-slot"></div>
+                <div class="center-line"></div>
                 <div id="reel-green" class="reel"></div>
             </div>
             <button class="stop-btn" id="stop-green" disabled>STOP</button>
@@ -170,23 +165,30 @@
 
     <script>
         const images = ["01.png", "02.png", "03.png", "04.png", "05.png", "06.png", "07.png", "08.png", "09.png", "10.png"];
+        const ITEM_HEIGHT = 220; // 画像1枚の高さ
+        const VIEW_HEIGHT = 380; // スロット枠の高さ
+        const OFFSET = (VIEW_HEIGHT - ITEM_HEIGHT) / 2; // 中央に合わせるためのオフセット
+
         const reels = [
-            { id: 'red', element: document.getElementById('reel-red'), stopBtn: document.getElementById('stop-red'), timer: null, pos: 0, speed: 0 },
-            { id: 'blue', element: document.getElementById('reel-blue'), stopBtn: document.getElementById('stop-blue'), timer: null, pos: 0, speed: 0 },
-            { id: 'green', element: document.getElementById('reel-green'), stopBtn: document.getElementById('stop-green'), timer: null, pos: 0, speed: 0 }
+            { id: 'red', element: document.getElementById('reel-red'), stopBtn: document.getElementById('stop-red'), y: 0, speed: 0, isSpinning: false },
+            { id: 'blue', element: document.getElementById('reel-blue'), stopBtn: document.getElementById('stop-blue'), y: 0, speed: 0, isSpinning: false },
+            { id: 'green', element: document.getElementById('reel-green'), stopBtn: document.getElementById('stop-green'), y: 0, speed: 0, isSpinning: false }
         ];
 
         const startBtn = document.getElementById('action-btn');
         const pulse = document.getElementById('pulse-effect');
 
-        // リールに画像を初期セット
+        // リールの初期化
         reels.forEach(reel => {
-            // スロットのために画像を循環させる（3枚以上並べる）
-            for(let i=0; i<20; i++) {
+            // 無限ループに見せるため画像を多めに配置
+            const content = [...images, ...images, ...images];
+            content.forEach(src => {
                 const img = document.createElement('img');
-                img.src = images[i % images.length];
+                img.src = src;
                 reel.element.appendChild(img);
-            }
+            });
+            reel.y = -ITEM_HEIGHT; // 初期位置
+            reel.element.style.transform = `translateY(${reel.y}px)`;
         });
 
         function triggerPulse() {
@@ -195,47 +197,66 @@
             pulse.classList.add('animate-pulse');
         }
 
-        function spin(reel) {
-            reel.pos += reel.speed;
-            if (reel.pos >= 220) {
-                reel.pos = 0;
-                // 先頭の画像を最後に回す
-                reel.element.appendChild(reel.element.firstElementChild);
-            }
-            reel.element.style.transform = `translateY(${reel.pos}px)`;
-            reel.timer = requestAnimationFrame(() => spin(reel));
+        function update() {
+            reels.forEach(reel => {
+                if (reel.isSpinning || reel.speed > 0) {
+                    reel.y -= reel.speed;
+                    // ループ処理
+                    if (reel.y <= -(ITEM_HEIGHT * images.length)) {
+                        reel.y += (ITEM_HEIGHT * images.length);
+                    }
+                    reel.element.style.transform = `translateY(${reel.y}px)`;
+                }
+            });
+            requestAnimationFrame(update);
         }
+        update();
 
         startBtn.addEventListener('click', () => {
             triggerPulse();
             startBtn.disabled = true;
             reels.forEach(reel => {
-                reel.speed = 20; // 回転速度
+                reel.speed = 30; // 回転速度
+                reel.isSpinning = true;
                 reel.stopBtn.disabled = false;
-                spin(reel);
             });
         });
 
         reels.forEach(reel => {
             reel.stopBtn.addEventListener('click', () => {
                 reel.stopBtn.disabled = true;
-                
-                // 徐々に減速して止める演出（約1秒）
-                const slowDown = setInterval(() => {
-                    reel.speed *= 0.8;
-                    if (reel.speed < 1) {
-                        clearInterval(slowDown);
-                        cancelAnimationFrame(reel.timer);
+                reel.isSpinning = false;
+
+                // 減速して中央にピタッと止まるロジック
+                const timer = setInterval(() => {
+                    reel.speed *= 0.9; // じわじわ減速
+                    
+                    if (reel.speed < 2) {
+                        clearInterval(timer);
                         reel.speed = 0;
-                        reel.element.style.transform = `translateY(30px)`; // 真ん中に合わせる調整
-                        checkAllStopped();
+                        
+                        // 現在の位置から、最も近い画像の中央位置(OFFSET)を計算
+                        const currentPos = Math.abs(reel.y);
+                        const nearestIndex = Math.round((currentPos + OFFSET) / ITEM_HEIGHT);
+                        const targetY = -(nearestIndex * ITEM_HEIGHT) + OFFSET;
+                        
+                        // 最後に中央へ吸い付くアニメーション
+                        reel.element.style.transition = "transform 0.5s ease-out";
+                        reel.y = targetY;
+                        reel.element.style.transform = `translateY(${reel.y}px)`;
+                        
+                        // アニメーション完了後にtransitionを消す
+                        setTimeout(() => {
+                            reel.element.style.transition = "";
+                            checkAllStopped();
+                        }, 500);
                     }
-                }, 100);
+                }, 50);
             });
         });
 
         function checkAllStopped() {
-            if (reels.every(r => r.speed === 0)) {
+            if (reels.every(r => r.speed === 0 && !r.isSpinning)) {
                 startBtn.disabled = false;
             }
         }
